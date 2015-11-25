@@ -1,10 +1,13 @@
 (require 'package) ;; You might already have this line
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
+	     '("melpa" . "https://melpa.org/packages/"))
 (when (< emacs-major-version 24)
   ;; For important compatibility libraries like cl-lib
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize) ;; You might already have this line
+
+
+(setenv "PATH" (concat "/Users/rvion/.local/bin/:" (getenv "PATH")))
 
 (global-set-key (kbd "<s-right>") 'move-end-of-line)
 (global-set-key (kbd "<s-left>") 'move-beginning-of-line)
@@ -21,6 +24,11 @@
 (global-set-key (kbd "s-Z") 'undo-tree-redo)
 ;; (global-undo-tree-mode)
 
+(defun conf()
+  (interactive)
+  (find-file "/Users/rvion/.emacs"))
+
+
 (defun end-of-line-and-indented-new-line ()
   (interactive)
   (end-of-line)
@@ -35,12 +43,10 @@
 
 (global-set-key (kbd "s-S-<return>") 'beginning-of-line-and-indented-new-line-before)
 
-(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin"))
-
 
 (require 'smex) ; Not needed if you use package.el
 (smex-initialize) ; Can be omitted. This might cause a (minimal) delay
-                  ; when Smex is auto-initialized on its first run.
+		  ; when Smex is auto-initialized on its first run.
 ;; Bind some keys:	  ;
 
 (global-set-key (kbd "s-P") 'smex)
@@ -53,7 +59,7 @@
 
 (setq fiplr-root-markers '(".git" ".svn"))
 (setq fiplr-ignored-globs '((directories (".git" ".svn" ".stack-work"))
-                            (files ("*.jpg" "*.png" "*.zip" "*~"))))
+			    (files ("*.jpg" "*.png" "*.zip" "*~"))))
 
 
 (global-set-key (kbd "s-p") 'fiplr-find-file)
@@ -67,9 +73,9 @@
   (cond
    ((and mark-active transient-mark-mode)
     (if (> (point) (mark))
-        (exchange-point-and-mark))
+	(exchange-point-and-mark))
     (let ((column (current-column))
-          (text (delete-and-extract-region (point) (mark))))
+	  (text (delete-and-extract-region (point) (mark))))
       (forward-line arg)
       (move-to-column column t)
       (set-mark (point))
@@ -80,15 +86,15 @@
     (let ((column (current-column)))
       (beginning-of-line)
       (when (or (> arg 0) (not (bobp)))
-        (forward-line)
-        (when (or (< arg 0) (not (eobp)))
-          (transpose-lines arg)
-          (when (and (eval-when-compile
-                       '(and (>= emacs-major-version 24)
-                             (>= emacs-minor-version 3)))
-                     (< arg 0))
-            (forward-line -1)))
-        (forward-line -1))
+	(forward-line)
+	(when (or (< arg 0) (not (eobp)))
+	  (transpose-lines arg)
+	  (when (and (eval-when-compile
+		       '(and (>= emacs-major-version 24)
+			     (>= emacs-minor-version 3)))
+		     (< arg 0))
+	    (forward-line -1)))
+	(forward-line -1))
       (move-to-column column t)))))
 
 (defun move-text-down (arg)
@@ -106,8 +112,8 @@
 
 ;; (global-set-key [M-S-up] 'move-text-up)
 ;; (global-set-key [M-S-down] 'move-text-down)
-(global-set-key (kbd "M-S-<up>") 'move-text-up)
-(global-set-key (kbd "M-S-<down>") 'move-text-down)
+(global-set-key (kbd "C-s-<up>") 'move-text-up)
+(global-set-key (kbd "C-s-<down>") 'move-text-down)
 (global-set-key (kbd "s-w") 'kill-this-buffer)
 
 (delete-selection-mode 1)
@@ -125,3 +131,60 @@
 ;; C-h ?
 
 (global-set-key (kbd "s-o") 'find-file)
+
+;; Backups ================
+(setq backup-directory-alist
+   `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+   `((".*" ,temporary-file-directory t)))
+;; This will all place all auto-saves and backups in the directory pointed to by temporary-file-directory (e.g., C:/Temp/ on Windows).
+
+;; If you visit the backup directory from time to time to retrieve an old file version then it’s a good idea to prevent the directory from cluttering up with very old backup files. Put this into your .emacs to automatically purge backup files not accessed in a week:
+
+;; (message "Deleting old backup files...")
+;; (let ((week (* 60 60 24 7))
+;;       (current (float-time (current-time))))
+;;   (dolist (file (directory-files temporary-file-directory t))
+;;     (when (and (backup-file-name-p file)
+;;                (> (- current (float-time (fifth (file-attributes file))))
+;;                   week))
+;;       (message "%s" file)
+;;       (delete-file file))))
+(message "Loaded. Hello Remi, nice to see you today :)")
+
+(global-set-key (kbd "<backtab>") 'indent-rigidly)
+
+
+;; (defun kill-full-line (arg)			 
+;;   "Kill while line even if not at the beginning" 
+;;   (interactive)					 
+;;   (beginning-of-line)				 
+;;   (kill-line))
+
+;; (global-set-key (kbd "s-<backspace>") 'kill-full-line)
+
+;; =====================================================================================
+;; (global-set-key (kbd "s-O") ('fiplr-find-directory "test")) ;
+(defvar killed-file-list nil
+  "List of recently killed files.")
+
+(defun add-file-to-killed-file-list ()
+  "If buffer is associated with a file name, add that file to the
+`killed-file-list' when killing the buffer."
+  (when buffer-file-name
+    (push buffer-file-name killed-file-list)))
+
+(add-hook 'kill-buffer-hook #'add-file-to-killed-file-list)
+
+(defun reopen-killed-file ()
+  "Reopen the most recently killed file, if one exists."
+  (interactive)
+  (when killed-file-list
+    (find-file (pop killed-file-list))))
+
+(global-set-key (kbd "s-T") 'reopen-killed-file)
+
+;; ====================================================================
+
+;;  kills to the left
+(global-set-key (kbd "s-<backspace>") '(lambda () (interactive) (kill-line 0)) )
