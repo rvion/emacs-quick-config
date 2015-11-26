@@ -1,3 +1,4 @@
+;; ```lisp
 (require 'package) ;; You might already have this line
 (add-to-list 'package-archives
 	     '("melpa" . "https://melpa.org/packages/"))
@@ -231,3 +232,4 @@ Version 2015-06-12"
 (global-set-key (kbd "s-n") 'xah-new-empty-buffer)
 
 ;; ============================================================
+;; ```
