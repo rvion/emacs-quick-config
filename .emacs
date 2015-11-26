@@ -1,18 +1,28 @@
-;; ```lisp
 (require 'package) ;; You might already have this line
-(add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/"))
-(when (< emacs-major-version 24)
-  ;; For important compatibility libraries like cl-lib
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (when (< emacs-major-version 24)
+;;   ;; For important compatibility libraries like cl-lib
+;;   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize) ;; You might already have this line
 
+
+;; Ensure { and [ can be written with right alt / alt-shift keys
+(setq mac-option-key-is-meta t)
+(setq mac-right-option-modifier nil)
+
+(require 'company)
+(add-hook 'after-init-hook 'global-company-mode)
+
+;; Installed packages
 ;; async              20151123.256  installed             Asynchronous processing in Emacs
+;; autopair           20140825.427  installed             Automagically pair braces and quotes like TextMate
 ;; company            20151103.230  installed             Modular text completion framework
 ;; company-ghc        20151122.2015 installed             company-mode ghc-mod backend
 ;; cycbuf             20131203.1237 installed             Cycle buffers, inspired by swbuff.el, swbuff-x.el, and bs.el
 ;; dash               20151021.113  installed             A modern list library for Emacs
 ;; fiplr              20140723.2345 installed             Fuzzy Search for Files in Projects
+;; flymake-easy       20140818.55   installed             Helpers for easily building flymake checkers
+;; flymake-hlint      20130309.145  installed             A flymake handler for haskell-mode files using hlint
 ;; fringe-helper      20140620.1409 installed             helper functions for fringe bitmaps
 ;; ghc                20151013.1219 installed             Sub mode for Haskell mode
 ;; git-commit         20151111.418  installed             Edit Git commit messages
@@ -20,17 +30,22 @@
 ;; git-gutter-fringe+ 20140729.403  installed             Fringe version of git-gutter+.el
 ;; grizzl             20150711.2230 installed             Fast fuzzy search index for Emacs.
 ;; haskell-mode       20151125.613  installed             A Haskell editing mode
+;; hindent            20151113.24   installed             Indent haskell code using the "hindent" program
+;; rainbow-delimiters 20150320.17   installed             Highlight brackets according to their depth
 ;; smex               20150822.1146 installed             M-x interface with Ido-style fuzzy matching.
+;; solarized-theme    20151119.1459 installed             The Solarized color theme, ported to Emacs.
+;; tabbar             20141109.143  installed             Display a tab bar in the header line
 ;; undo-tree          20140509.522  installed             Treat undo history as a tree
 ;; with-editor        20151111.418  installed             Use the Emacsclient as $EDITOR
 
-;; Git gutter
+
+;; Git gutter and line numbers
+(global-linum-mode +1)
 (require 'git-gutter-fringe+)
 (global-git-gutter+-mode +1)
-(global-linum-mode +1)
 
-(global-set-key (kbd "C-<tab>") 'cycbuf-switch-to-next-buffer)
-(global-set-key (kbd "C-S-<tab>") 'cycbuf-switch-to-previous-buffer)
+;; (global-set-key (kbd "C-<tab>") 'cycbuf-switch-to-next-buffer)
+;; (global-set-key (kbd "C-S-<tab>") 'cycbuf-switch-to-previous-buffer)
 ;; (setq buffer-flip-keys (kbd "C-<tab>"))	;
 
 (setenv "PATH" (concat "/Users/rvion/.local/bin/:" (getenv "PATH")))
@@ -54,7 +69,7 @@
 
 (defun conf()
   (interactive)
-  (find-file "/Users/rvion/.emacs"))
+  (find-file user-init-file))
 
 
 (defun end-of-line-and-indented-new-line ()
@@ -178,7 +193,6 @@
 ;;                   week))
 ;;       (message "%s" file)
 ;;       (delete-file file))))
-(message "Loaded. Hello Remi, nice to see you today :)")
 
 (global-set-key (kbd "<backtab>") 'indent-rigidly)
 
@@ -233,3 +247,93 @@ Version 2015-06-12"
 
 ;; ============================================================
 ;; ```
+
+(require 'tabbar)
+; turn on the tabbar
+(tabbar-mode t)
+; define all tabs to be one of 3 possible groups: “Emacs Buffer”, “Dired”,
+;“User Buffer”.
+
+(defun tabbar-buffer-groups ()
+  "Return the list of group names the current buffer belongs to.
+This function is a custom function for tabbar-mode's tabbar-buffer-groups.
+This function group all buffers into 3 groups:
+Those Dired, those user buffer, and those emacs buffer.
+Emacs buffer are those starting with “*”."
+  (list
+   (cond
+    ((string-equal "*" (substring (buffer-name) 0 1))
+     "Emacs Buffer"
+     )
+    ((eq major-mode 'dired-mode)
+     "Dired"
+     )
+    (t
+     "User Buffer"
+     )
+    )))
+
+(setq tabbar-buffer-groups-function 'tabbar-buffer-groups)
+
+(global-set-key (kbd "C-S-<tab>") 'tabbar-backward-tab)
+(global-set-key (kbd "C-<tab>") 'tabbar-forward-tab)
+
+
+;; ================haskell mode==============
+(let ((my-cabal-path (expand-file-name "~/.local/bin")))
+  (setenv "PATH" (concat my-cabal-path path-separator (getenv "PATH")))
+  (add-to-list 'exec-path my-cabal-path))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-ghc-show-info t)
+ '(custom-safe-themes
+   (quote
+    ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" default)))
+ '(haskell-tags-on-save t))
+
+(autoload 'ghc-init "ghc" nil t)
+(autoload 'ghc-debug "ghc" nil t)
+(add-hook 'haskell-mode-hook (lambda () (ghc-init)))
+
+;; (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
+;; (add-hook 'haskell-mode-hook #'hindent-mode)
+;; (add-hook 'haskell-mode-hook 'turn-on-hi2)
+(eval-after-load 'haskell-mode
+  '(define-key haskell-mode-map [f8] 'haskell-navigate-imports))
+
+(add-to-list 'company-backends 'company-ghc)
+(custom-set-variables '(company-ghc-show-info t))
+
+
+;; ;; ========================
+
+;; ;; not working
+;; (defun switch-to-minibuffer-window ()
+;;   "switch to minibuffer window (if active)"
+;;   (interactive)
+;;   (when (active-minibuffer-window)
+;;     (select-window (active-minibuffer-window))))
+;; (global-set-key (kbd "<f7>") 'switch-to-minibuffer-window)
+
+
+(require 'rainbow-delimiters)
+(add-hook 'haskell-mode-hook #'rainbow-delimiters-mode)
+(global-set-key (kbd "M-<tab>") 'company-complete)
+
+(require 'autopair)
+(autopair-global-mode) ;; to enable in all buffers
+
+
+(require 'flymake-hlint)
+(add-hook 'haskell-mode-hook 'flymake-hlint-load)
+;; =============== =============== =============== =============== =============== =============== ===============
+(message "Loaded. Hello Remi, nice to see you today :)")
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
