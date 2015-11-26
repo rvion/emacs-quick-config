@@ -6,6 +6,31 @@
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize) ;; You might already have this line
 
+;; async              20151123.256  installed             Asynchronous processing in Emacs
+;; company            20151103.230  installed             Modular text completion framework
+;; company-ghc        20151122.2015 installed             company-mode ghc-mod backend
+;; cycbuf             20131203.1237 installed             Cycle buffers, inspired by swbuff.el, swbuff-x.el, and bs.el
+;; dash               20151021.113  installed             A modern list library for Emacs
+;; fiplr              20140723.2345 installed             Fuzzy Search for Files in Projects
+;; fringe-helper      20140620.1409 installed             helper functions for fringe bitmaps
+;; ghc                20151013.1219 installed             Sub mode for Haskell mode
+;; git-commit         20151111.418  installed             Edit Git commit messages
+;; git-gutter+        20150925.231  installed             Manage Git hunks straight from the buffer
+;; git-gutter-fringe+ 20140729.403  installed             Fringe version of git-gutter+.el
+;; grizzl             20150711.2230 installed             Fast fuzzy search index for Emacs.
+;; haskell-mode       20151125.613  installed             A Haskell editing mode
+;; smex               20150822.1146 installed             M-x interface with Ido-style fuzzy matching.
+;; undo-tree          20140509.522  installed             Treat undo history as a tree
+;; with-editor        20151111.418  installed             Use the Emacsclient as $EDITOR
+
+;; Git gutter
+(require 'git-gutter-fringe+)
+(global-git-gutter+-mode +1)
+(global-linum-mode +1)
+
+(global-set-key (kbd "C-<tab>") 'cycbuf-switch-to-next-buffer)
+(global-set-key (kbd "C-S-<tab>") 'cycbuf-switch-to-previous-buffer)
+;; (setq buffer-flip-keys (kbd "C-<tab>"))	;
 
 (setenv "PATH" (concat "/Users/rvion/.local/bin/:" (getenv "PATH")))
 
@@ -18,6 +43,8 @@
 (autoload 'ghc-debug "ghc" nil t)
 (add-hook 'haskell-mode-hook (lambda () (ghc-init)))
 
+;; Follow sylinks without warnings
+(setq vc-follow-symlinks t)
 
 (require 'undo-tree)
 (global-set-key (kbd "s-z") 'undo-tree-undo)
@@ -63,7 +90,7 @@
 
 
 (global-set-key (kbd "s-p") 'fiplr-find-file)
-(global-set-key (kbd "s-r") 'eval-buffer) 
+(global-set-key (kbd "s-r") 'eval-buffer)
 (global-set-key (kbd "s-/") 'comment-dwim)
 (global-set-key (kbd "s-<up>") 'beginning-of-buffer)
 (global-set-key (kbd "s-<down>") 'end-of-buffer)
@@ -155,10 +182,10 @@
 (global-set-key (kbd "<backtab>") 'indent-rigidly)
 
 
-;; (defun kill-full-line (arg)			 
-;;   "Kill while line even if not at the beginning" 
-;;   (interactive)					 
-;;   (beginning-of-line)				 
+;; (defun kill-full-line (arg)
+;;   "Kill while line even if not at the beginning"
+;;   (interactive)
+;;   (beginning-of-line)
 ;;   (kill-line))
 
 ;; (global-set-key (kbd "s-<backspace>") 'kill-full-line)
@@ -188,3 +215,19 @@
 
 ;;  kills to the left
 (global-set-key (kbd "s-<backspace>") '(lambda () (interactive) (kill-line 0)) )
+
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; cmd-n : new file
+(defun xah-new-empty-buffer ()
+  "Open a new empty buffer.
+URL `http://ergoemacs.org/emacs/emacs_new_empty_buffer.html'
+Version 2015-06-12"
+  (interactive)
+  (let ((ξbuf (generate-new-buffer "untitled")))
+    (switch-to-buffer ξbuf)
+    (funcall (and initial-major-mode))
+    (setq buffer-offer-save t)))
+(global-set-key (kbd "s-n") 'xah-new-empty-buffer)
+
+;; ============================================================
